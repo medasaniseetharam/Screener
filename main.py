@@ -142,8 +142,11 @@ run_scan()
 # =========================
 # STEP 5: SCHEDULE DAILY
 # =========================
-schedule.every().day.at("18:00").do(run_scan)
+print("🚀 Cloud Scanner Started...")
+
+# TEMP TEST (run every 1 min)
+schedule.every(1).minutes.do(run_scan)
 
 while True:
     schedule.run_pending()
-    time.sleep(60)
+    time.sleep(30)
