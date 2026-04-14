@@ -16,7 +16,7 @@ def get_chartink_stocks():
         df.columns = df.columns.str.strip()
         print("Columns:", df.columns)
 
-        stocks = [str(symbol).strip() + ".NS" for symbol in df['NSE Code'].dropna()]
+        stocks = [str(symbol).strip() + ".NS" for symbol in df["NSE Code"].dropna()]
 
         print("Chartink Stocks:", stocks[:20])  # show first 20 only
         return stocks
@@ -24,6 +24,7 @@ def get_chartink_stocks():
     except Exception as e:
         print("❌ Error reading sheet:", e)
         return []
+
 
 # =========================
 # STEP 2: BREAKOUT LOGIC
@@ -41,14 +42,14 @@ def check_breakout(stock):
         latest = df.iloc[-1]
         prev = df.iloc[:-1]
 
-        close = float(latest['Close'])
-        open_ = float(latest['Open'])
-        high = float(latest['High'])
-        low = float(latest['Low'])
-        volume = float(latest['Volume'])
+        close = float(latest["Close"])
+        open_ = float(latest["Open"])
+        high = float(latest["High"])
+        low = float(latest["Low"])
+        volume = float(latest["Volume"])
 
-        highestHigh = float(prev['High'][-10:].max())
-        avgVolume = float(prev['Volume'][-10:].mean())
+        highestHigh = float(prev["High"][-10:].max())
+        avgVolume = float(prev["Volume"][-10:].mean())
 
         isBreakout = close > highestHigh
         isBullish = close > open_
@@ -59,7 +60,7 @@ def check_breakout(stock):
             return {
                 "stock": stock.replace(".NS", ""),
                 "close": round(close, 2),
-                "volume": int(volume)
+                "volume": int(volume),
             }
 
         return None
@@ -67,6 +68,7 @@ def check_breakout(stock):
     except Exception as e:
         print(f"Error in {stock}:", e)
         return None
+
 
 # =========================
 # STEP 3: TELEGRAM ALERT
@@ -77,14 +79,14 @@ def send_telegram(stocks):
 
     if not stocks:
         message = "❌ No Breakout Stocks Today"
-  #  else:
-  #    message = "🚀 BO Stocks:\n\n"
-  #      for s in stocks:
-   #         message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
-
-     else:
+    else:
         # ✅ Sort by volume DESC (extra safety if not sorted earlier)
-        stocks = sorted(stocks, key=lambda x: x['volume'], reverse=True)
+        stocks = sorted(stocks, key=lambda x: x["volume"], reverse=True)
+
+        #  else:
+        #    message = "🚀 BO Stocks:\n\n"
+        #      for s in stocks:
+        #         message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
 
         # ✅ Add total count
         message = f"🚀 BO Stocks\n"
@@ -100,6 +102,7 @@ def send_telegram(stocks):
         print("✅ Telegram sent")
     except Exception as e:
         print("❌ Telegram error:", e)
+
 
 # =========================
 # STEP 4: MAIN SCAN
@@ -121,6 +124,7 @@ def run_scan():
         print("BO Stocks:", breakout_stocks)
 
     send_telegram(breakout_stocks)
+
 
 # =========================
 # STEP 5: RUN + SCHEDULE
