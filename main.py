@@ -105,7 +105,7 @@ def send_telegram(stocks):
     import requests
 
     token = "YOUR_BOT_TOKEN"
-    chat_id = "YOUR_CHAT_ID"
+    chat_id = "8610840272"
 
     if not stocks:
         message = "❌ No Breakout Stocks Today"
