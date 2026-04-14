@@ -118,10 +118,10 @@ def run_scan():
 print("🚀 Cloud Scanner Started...")
 
 # 🔥 TEST MODE (every 1 min)
-schedule.every(1).minutes.do(run_scan)
+# schedule.every(1).minutes.do(run_scan)
 
 # 👉 AFTER TEST, CHANGE TO:
-# schedule.every().day.at("12:35").do(run_scan)
+ schedule.every().day.at("12:35").do(run_scan)
 
 # Run once immediately
 run_scan()
