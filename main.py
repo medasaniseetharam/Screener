@@ -77,8 +77,19 @@ def send_telegram(stocks):
 
     if not stocks:
         message = "❌ No Breakout Stocks Today"
-    else:
-        message = "🚀 BO Stocks:\n\n"
+  #  else:
+  #    message = "🚀 BO Stocks:\n\n"
+  #      for s in stocks:
+   #         message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
+
+     else:
+        # ✅ Sort by volume DESC (extra safety if not sorted earlier)
+        stocks = sorted(stocks, key=lambda x: x['volume'], reverse=True)
+
+        # ✅ Add total count
+        message = f"🚀 BO Stocks\n"
+        message += f"📊 Total: {len(stocks)}\n\n"
+
         for s in stocks:
             message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
 
@@ -107,7 +118,7 @@ def run_scan():
         if result:
             breakout_stocks.append(result)
 
-    print("BO Stocks:", breakout_stocks)
+        print("BO Stocks:", breakout_stocks)
 
     send_telegram(breakout_stocks)
 
