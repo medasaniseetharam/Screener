@@ -130,7 +130,9 @@ run_scan()
 print("🚀 Cloud Scanner Started...")
 
 # TEMP TEST (run every 1 min)
-schedule.every(1).minutes.do(run_scan)
+#schedule.every(1).minutes.do(run_scan)
+
+send_telegram([{"stock": "TEST", "close": 100, "volume": 1000}])
 
 while True:
     schedule.run_pending()
