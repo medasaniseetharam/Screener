@@ -121,7 +121,7 @@ def run_scan():
         if result:
             breakout_stocks.append(result)
 
-        print("BO Stocks:", breakout_stocks)
+    print("BO Stocks:", breakout_stocks)
 
     send_telegram(breakout_stocks)
 
