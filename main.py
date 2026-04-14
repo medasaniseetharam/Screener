@@ -107,24 +107,35 @@ def send_telegram(stocks):
 # =========================
 # STEP 4: MAIN SCAN
 # =========================
+from concurrent.futures import ThreadPoolExecutor
+
 def run_scan():
     print("Running scan...")
 
     stocks = get_chartink_stocks()
-    breakout_stocks = []
 
-    # Optional: limit for speed
-    stocks = stocks[:100]
+    # ✅ REMOVE THIS (if present)
+    # stocks = stocks[:100]
 
-    for stock in stocks:
-        result = check_breakout(stock)
-        if result:
-            breakout_stocks.append(result)
+    # ✅ PARALLEL PROCESSING STARTS HERE
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        results = list(executor.map(check_breakout, stocks))
+
+    # ✅ Filter only valid breakouts
+    breakout_stocks = [r for r in results if r]
+
+    # ✅ Sort by volume DESC
+    breakout_stocks = sorted(
+        breakout_stocks,
+        key=lambda x: x['volume'],
+        reverse=True
+    )
 
     print("BO Stocks:", breakout_stocks)
 
+    # Call whichever you want
     send_telegram(breakout_stocks)
-
+    # send_email(breakout_stocks)
 
 # =========================
 # STEP 5: RUN + SCHEDULE
