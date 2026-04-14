@@ -99,7 +99,7 @@ def run_scan():
 
     print("BO Stocks:", breakout_stocks)
 
-    send_email(breakout_stocks)
+ send_telegram(breakout_stocks)
 
 def send_telegram(stocks):
     import requests
