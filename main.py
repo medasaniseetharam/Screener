@@ -18,7 +18,7 @@ def get_chartink_stocks():
 
         stocks = [str(symbol).strip() + ".NS" for symbol in df["NSE Code"].dropna()]
 
-        print("Chartink Stocks:", stocks[:20])  # show first 20 only
+        print("Chartink Stocks:", stocks) 
         return stocks
 
     except Exception as e:
