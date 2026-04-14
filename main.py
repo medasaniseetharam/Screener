@@ -101,40 +101,25 @@ def run_scan():
 
     send_email(breakout_stocks)
 
-# =========================
-# STEP 4: EMAIL
-# =========================
+def send_telegram(stocks):
+    import requests
 
-
-def send_email(stocks):
-    import smtplib
-    from email.mime.text import MIMEText
-
-    sender = "seetharammedasani@gmail.com"
-    password = "ozewdjzqxuahsyiq"
-    receiver = "seetharammedasani@gmail.com"
+    token = "YOUR_BOT_TOKEN"
+    chat_id = "YOUR_CHAT_ID"
 
     if not stocks:
-        body = "No Breakout Stocks Today"
+        message = "❌ No Breakout Stocks Today"
     else:
-        lines = []
+        message = "🚀 BO Stocks:\n\n"
         for s in stocks:
-            line = f"{s['stock']} | Price: ₹{s['close']} | Volume: {s['volume']}"
-            lines.append(line)
+            message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
 
-        body = "\n".join(lines)
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
 
-    # ✅ FIX: Use UTF-8 email
-    msg = MIMEText(body, "plain", "utf-8")
-    msg["Subject"] = "BO Stocks"
-    msg["From"] = sender
-    msg["To"] = receiver
-
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(sender, password)
-        server.send_message(msg)
-
+    requests.post(url, data={
+        "chat_id": chat_id,
+        "text": message
+    })
 
 # Run immediately for testing
 run_scan()
