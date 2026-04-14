@@ -5,29 +5,20 @@ import schedule
 import time
 
 # =========================
-# STEP 1: FETCH CHARTINK DATA (REAL)
+# STEP 1: FETCH CHARTINK DATA
 # =========================
-
-
 def get_chartink_stocks():
-    import pandas as pd
-
-    # ✅ Correct CSV export link
     url = "https://docs.google.com/spreadsheets/d/1bzO5HlakZWKgbWCqB30L-6t7Mk67keraKTw5DL22pxY/export?format=csv"
 
     try:
         df = pd.read_csv(url)
 
-        # Clean column names
         df.columns = df.columns.str.strip()
         print("Columns:", df.columns)
 
-        # ✅ Use correct column name
-        stocks = [str(symbol).strip() +
-                  ".NS" for symbol in df['NSE Code'].dropna()]
+        stocks = [str(symbol).strip() + ".NS" for symbol in df['NSE Code'].dropna()]
 
-        print("Chartink Stocks:", stocks)
-
+        print("Chartink Stocks:", stocks[:20])  # show first 20 only
         return stocks
 
     except Exception as e:
@@ -35,10 +26,8 @@ def get_chartink_stocks():
         return []
 
 # =========================
-# STEP 2: YOUR BO LOGIC
+# STEP 2: BREAKOUT LOGIC
 # =========================
-
-
 def check_breakout(stock):
     try:
         df = yf.download(stock, period="1mo", interval="1d", progress=False)
@@ -49,9 +38,6 @@ def check_breakout(stock):
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
 
-        length = 10
-        volMultiplier = 1.5
-
         latest = df.iloc[-1]
         prev = df.iloc[:-1]
 
@@ -61,13 +47,13 @@ def check_breakout(stock):
         low = float(latest['Low'])
         volume = float(latest['Volume'])
 
-        highestHigh = float(prev['High'][-length:].max())
-        avgVolume = float(prev['Volume'][-length:].mean())
+        highestHigh = float(prev['High'][-10:].max())
+        avgVolume = float(prev['Volume'][-10:].mean())
 
         isBreakout = close > highestHigh
         isBullish = close > open_
         isHighClose = close >= (high - (high - low) * 0.25)
-        isVolumeSpike = volume > avgVolume * volMultiplier
+        isVolumeSpike = volume > avgVolume * 1.5
 
         if isBreakout and isBullish and isHighClose and isVolumeSpike:
             return {
@@ -81,30 +67,12 @@ def check_breakout(stock):
     except Exception as e:
         print(f"Error in {stock}:", e)
         return None
+
 # =========================
-# STEP 3: MAIN SCAN
+# STEP 3: TELEGRAM ALERT
 # =========================
-
-
-def run_scan():
-    print("Running scan...")
-
-    stocks = get_chartink_stocks()
-    breakout_stocks = []
-
-    for stock in stocks:
-        result = check_breakout(stock)
-        if result:
-            breakout_stocks.append(result)
-
-    print("BO Stocks:", breakout_stocks)
-
- send_telegram(breakout_stocks)
-
 def send_telegram(stocks):
-    import requests
-
-    token = "YOUR_BOT_TOKEN"
+    token = "bot8667626238:AAE04TszgZDIZkqyiFS7cAn_uEYZuJ3OlRI"
     chat_id = "8610840272"
 
     if not stocks:
@@ -116,24 +84,49 @@ def send_telegram(stocks):
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
 
-    requests.post(url, data={
-        "chat_id": chat_id,
-        "text": message
-    })
-
-# Run immediately for testing
-run_scan()
+    try:
+        requests.post(url, data={"chat_id": chat_id, "text": message})
+        print("✅ Telegram sent")
+    except Exception as e:
+        print("❌ Telegram error:", e)
 
 # =========================
-# STEP 5: SCHEDULE DAILY
+# STEP 4: MAIN SCAN
 # =========================
+def run_scan():
+    print("Running scan...")
+
+    stocks = get_chartink_stocks()
+    breakout_stocks = []
+
+    # Optional: limit for speed
+    stocks = stocks[:100]
+
+    for stock in stocks:
+        result = check_breakout(stock)
+        if result:
+            breakout_stocks.append(result)
+
+    print("BO Stocks:", breakout_stocks)
+
+    send_telegram(breakout_stocks)
+
+# =========================
+# STEP 5: RUN + SCHEDULE
+# =========================
+
 print("🚀 Cloud Scanner Started...")
 
-# TEMP TEST (run every 1 min)
-#schedule.every(1).minutes.do(run_scan)
+# 🔥 TEST MODE (every 1 min)
+schedule.every(1).minutes.do(run_scan)
 
-send_telegram([{"stock": "TEST", "close": 100, "volume": 1000}])
+# 👉 AFTER TEST, CHANGE TO:
+# schedule.every().day.at("12:35").do(run_scan)
 
+# Run once immediately
+run_scan()
+
+# Keep alive (IMPORTANT for cloud)
 while True:
     schedule.run_pending()
     time.sleep(30)
