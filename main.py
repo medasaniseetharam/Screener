@@ -62,7 +62,7 @@ def check_breakout(stock):
                 "stock": stock.replace(".NS", ""),
                 "close": round(close, 2),
                 "volume": int(volume),
-                "pct_change": round(pct_change, 2)
+                "pct_change": round(pct_change, 2),
             }
 
         return None
