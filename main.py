@@ -51,6 +51,10 @@ def check_breakout(stock):
         low = float(latest["Low"])
         volume = float(latest["Volume"])
 
+        # ✅ Previous close for % change
+        prev_close = float(prev.iloc[-1]["Close"])
+        pct_change = ((close - prev_close) / prev_close) * 100
+
         highestHigh = float(prev["High"][-10:].max())
         avgVolume = float(prev["Volume"][-10:].mean())
 
@@ -64,6 +68,7 @@ def check_breakout(stock):
                 "stock": stock.replace(".NS", ""),
                 "close": round(close, 2),
                 "volume": int(volume),
+                "pct_change": round(pct_change, 2)
             }
 
         return None
@@ -83,20 +88,14 @@ def send_telegram(stocks):
     if not stocks:
         message = "❌ No Breakout Stocks Today"
     else:
-        # ✅ Sort by volume DESC (extra safety if not sorted earlier)
+        # Sort by volume DESC
         stocks = sorted(stocks, key=lambda x: x["volume"], reverse=True)
 
-        #  else:
-        #    message = "🚀 BO Stocks:\n\n"
-        #      for s in stocks:
-        #         message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
-
-        # ✅ Add total count
         message = f"🚀 BO Stocks\n"
         message += f"📊 Total: {len(stocks)}\n\n"
 
         for s in stocks:
-            message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
+            message += f"{s['stock']} | ₹{s['close']} | {s['pct_change']}% | Vol: {s['volume']}\n"
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
 
@@ -135,16 +134,14 @@ def run_scan():
 
 print("🚀 Cloud Scanner Started...")
 
-# 🔥 TEST MODE (every 1 min)
-# schedule.every(1).minutes.do(run_scan)
+# schedule.every(1).minutes.do(run_scan)  # Test mode
 
-# 👉 AFTER TEST, CHANGE TO:
 schedule.every().day.at("12:35").do(run_scan)
 
 # Run once immediately
 run_scan()
 
-# Keep alive (IMPORTANT for cloud)
+# Keep alive
 while True:
     schedule.run_pending()
     time.sleep(30)
