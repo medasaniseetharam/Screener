@@ -7,6 +7,8 @@ import time
 # =========================
 # STEP 1: FETCH CHARTINK DATA
 # =========================
+
+
 def get_chartink_stocks():
     url = "https://docs.google.com/spreadsheets/d/1bzO5HlakZWKgbWCqB30L-6t7Mk67keraKTw5DL22pxY/export?format=csv"
 
@@ -16,9 +18,10 @@ def get_chartink_stocks():
         df.columns = df.columns.str.strip()
         print("Columns:", df.columns)
 
-        stocks = [str(symbol).strip() + ".NS" for symbol in df["NSE Code"].dropna()]
+        stocks = [str(symbol).strip() +
+                  ".NS" for symbol in df["NSE Code"].dropna()]
 
-        print("Chartink Stocks:", stocks) 
+        print("Chartink Stocks:", stocks)
         return stocks
 
     except Exception as e:
@@ -44,7 +47,6 @@ def check_breakout(stock):
 
         close = float(latest["Close"])
         open_ = float(latest["Open"])
-        pct_change = ((close - open_) / open_) * 100
         high = float(latest["High"])
         low = float(latest["Low"])
         volume = float(latest["Volume"])
@@ -62,7 +64,6 @@ def check_breakout(stock):
                 "stock": stock.replace(".NS", ""),
                 "close": round(close, 2),
                 "volume": int(volume),
-                "pct_change": round(pct_change, 2),
             }
 
         return None
@@ -95,7 +96,7 @@ def send_telegram(stocks):
         message += f"📊 Total: {len(stocks)}\n\n"
 
         for s in stocks:
-           message += f"{s['stock']} | ₹{s['close']} | {s['pct_change']}% | Vol: {s['volume']}\n"
+            message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
 
@@ -109,35 +110,24 @@ def send_telegram(stocks):
 # =========================
 # STEP 4: MAIN SCAN
 # =========================
-from concurrent.futures import ThreadPoolExecutor
-
 def run_scan():
     print("Running scan...")
 
     stocks = get_chartink_stocks()
+    breakout_stocks = []
 
-    # ✅ REMOVE THIS (if present)
-    # stocks = stocks[:100]
+    # Optional: limit for speed
+    stocks = stocks[:100]
 
-    # ✅ PARALLEL PROCESSING STARTS HERE
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        results = list(executor.map(check_breakout, stocks))
-
-    # ✅ Filter only valid breakouts
-    breakout_stocks = [r for r in results if r]
-
-    # ✅ Sort by volume DESC
-    breakout_stocks = sorted(
-        breakout_stocks,
-        key=lambda x: x['volume'],
-        reverse=True
-    )
+    for stock in stocks:
+        result = check_breakout(stock)
+        if result:
+            breakout_stocks.append(result)
 
     print("BO Stocks:", breakout_stocks)
 
-    # Call whichever you want
     send_telegram(breakout_stocks)
-    # send_email(breakout_stocks)
+
 
 # =========================
 # STEP 5: RUN + SCHEDULE
@@ -149,7 +139,7 @@ print("🚀 Cloud Scanner Started...")
 # schedule.every(1).minutes.do(run_scan)
 
 # 👉 AFTER TEST, CHANGE TO:
-#schedule.every().day.at("12:35").do(run_scan)
+schedule.every().day.at("12:35").do(run_scan)
 
 # Run once immediately
 run_scan()
