@@ -44,6 +44,7 @@ def check_breakout(stock):
 
         close = float(latest["Close"])
         open_ = float(latest["Open"])
+        pct_change = ((close - open_) / open_) * 100
         high = float(latest["High"])
         low = float(latest["Low"])
         volume = float(latest["Volume"])
@@ -61,6 +62,7 @@ def check_breakout(stock):
                 "stock": stock.replace(".NS", ""),
                 "close": round(close, 2),
                 "volume": int(volume),
+                "pct_change": round(pct_change, 2)
             }
 
         return None
@@ -93,7 +95,7 @@ def send_telegram(stocks):
         message += f"📊 Total: {len(stocks)}\n\n"
 
         for s in stocks:
-            message += f"{s['stock']} | ₹{s['close']} | Vol: {s['volume']}\n"
+           message += f"{s['stock']} | ₹{s['close']} | {s['pct_change']}% | Vol: {s['volume']}\n"
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
 
